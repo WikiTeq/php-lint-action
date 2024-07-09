@@ -1,0 +1,34 @@
+name: 'PHP linting action'
+description: 'Runs `phpcs` and `phplint`'
+author: 'WikiTeq'
+branding:
+  color: purple
+  icon: terminal
+runs:
+  using: "composite"
+  steps:
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: mbstring, intl
+        coverage: none
+        tools: composer, phpcs, phplint
+
+    - uses: actions/checkout@v4
+
+    - name: Setup Composer
+      run: composer update
+      shell: bash
+
+    - name: Lint
+      run: phplint -w --exclude=vendor
+      shell: bash
+
+    - name: PHP Code Sniffer
+      # We cannot just use the `phpcs` command because we want to make use of
+      # our configuration for this extension, and if we used that command it
+      # wouldn't autoload PHPUnitTestTrait properly. Potential cause:
+      # https://github.com/squizlabs/PHP_CodeSniffer/issues/1463
+      run: vendor/bin/phpcs -sp --standard=.phpcs.xml .
+      shell: bash
