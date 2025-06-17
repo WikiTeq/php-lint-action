@@ -30,5 +30,5 @@ runs:
       # our configuration for this extension, and if we used that command it
       # wouldn't autoload PHPUnitTestTrait properly. Potential cause:
       # https://github.com/squizlabs/PHP_CodeSniffer/issues/1463
-      run: vendor/bin/phpcs -sp --standard=.phpcs.xml .
+      run: vendor/bin/phpcs -sp --standard=.phpcs.xml --report=github .
       shell: bash
