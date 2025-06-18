@@ -30,5 +30,28 @@ runs:
       # our configuration for this extension, and if we used that command it
       # wouldn't autoload PHPUnitTestTrait properly. Potential cause:
       # https://github.com/squizlabs/PHP_CodeSniffer/issues/1463
-      run: vendor/bin/phpcs -sp --standard=.phpcs.xml --report=github .
+      run: |
+        vendor/bin/phpcs --report=json --standard=.phpcs.xml . > phpcs-report.json
+        
+        if [ -s phpcs-report.json ]; then
+          jq -c 'to_entries[] | {file: .key, messages: .value.messages}' phpcs-report.json | while read -r entry; do
+            FILE=$(echo "$entry" | jq -r '.file')
+            MESSAGES=$(echo "$entry" | jq '.messages')
+
+            if [ "$MESSAGES" != "null" ]; then
+              echo "$MESSAGES" | jq -c '.[]' | while read -r msg; do
+                LINE=$(echo "$msg" | jq -r '.line')
+                COL=$(echo "$msg" | jq -r '.column')
+                TYPE=$(echo "$msg" | jq -r '.type')
+                MESSAGE=$(echo "$msg" | jq -r '.message')
+
+                LEVEL="notice"
+                [ "$TYPE" = "ERROR" ] && LEVEL="error"
+                [ "$TYPE" = "WARNING" ] && LEVEL="warning"
+
+                echo "::${LEVEL} file=${FILE},line=${LINE},col=${COL}::${MESSAGE}"
+              done
+            fi
+          done
+        fi
       shell: bash
