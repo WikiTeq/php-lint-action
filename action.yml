@@ -18,7 +18,12 @@ runs:
     - uses: actions/checkout@v4
 
     - name: Setup Composer
-      run: composer update
+      run: |
+        if [ -f composer.json ]; then
+          composer update
+        else
+          echo "No composer.json found, skipping composer update"
+        fi
       shell: bash
 
     - name: Lint
@@ -30,5 +35,10 @@ runs:
       # our configuration for this extension, and if we used that command it
       # wouldn't autoload PHPUnitTestTrait properly. Potential cause:
       # https://github.com/squizlabs/PHP_CodeSniffer/issues/1463
-      run: vendor/bin/phpcs -sp --standard=.phpcs.xml .
+      run: |
+        if [ -x vendor/bin/phpcs ] && [ -f .phpcs.xml ]; then
+          vendor/bin/phpcs -sp --standard=.phpcs.xml .
+        else
+          echo "No vendor/bin/phpcs or .phpcs.xml found, skipping PHP Code Sniffer"
+        fi
       shell: bash
